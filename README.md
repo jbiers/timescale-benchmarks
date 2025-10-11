@@ -26,3 +26,20 @@ Populate the hypertable with data
 ```bash
 psql -d "postgres://postgres:password@localhost/homework" -c "\COPY cpu_usage FROM cpu_usage.csv CSV HEADER"
 ```
+
+Define a SQL query that "returns the max cpu usage and min cpu usage of the given hostname for every minute in the time range specified by the start time and end time". This is an example using the data from the first line in *query_params.csv*.
+
+The native *date_bin* function could potentially be used but I preferred TimescaleDB's own *time_bucket*.
+
+```SQL
+SELECT
+  time_bucket('1 minute', ts) AS minute,
+  MAX(usage) AS max_usage,
+  MIN(usage) AS min_usage
+FROM cpu_usage
+WHERE host = 'host_000008'
+  AND ts >= '2017-01-01 08:59:22'
+  AND ts <= '2017-01-01 09:59:22'
+GROUP BY minute
+ORDER BY minute;
+```
