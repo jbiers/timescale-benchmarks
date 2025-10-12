@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
+
+	"github.com/jbiers/timescale-benchmark/pkg/query"
 )
 
 // TODO: pass in a channel that will receive each line as a querydata type
@@ -46,10 +49,15 @@ func Stream(filePath string) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("Error parsing CSV line from query data file %s: %w", filePath, err)
+			return fmt.Errorf("Error reading CSV line from query data file %s: %w", filePath, err)
 		}
 
-		fmt.Println(record)
+		queryData, err := parseQueryData(record)
+		if err != nil {
+			return fmt.Errorf("Error parsing query data: %w", err)
+		}
+
+		fmt.Println(queryData)
 	}
 
 	return nil
@@ -77,4 +85,27 @@ func validateHeaderLine(header []string) error {
 	}
 
 	return nil
+}
+
+func parseQueryData(record []string) (query.QueryData, error) {
+	if len(record) != 3 {
+		return query.QueryData{}, fmt.Errorf("Expected 3 entries in query data record, found %d", len(record))
+	}
+
+	timeStringFormat := "2006-01-02 15:04:05"
+	startTime, err := time.Parse(timeStringFormat, record[1])
+	if err != nil {
+		return query.QueryData{}, fmt.Errorf("Failed to parse 'start_time' as time.Time format: %w", err)
+	}
+
+	endTime, err := time.Parse(timeStringFormat, record[1])
+	if err != nil {
+		return query.QueryData{}, fmt.Errorf("Failed to parse 'end_time' as time.Time format: %w", err)
+	}
+
+	return query.QueryData{
+		Hostname:  record[0],
+		StartTime: startTime,
+		EndTime:   endTime,
+	}, nil
 }
