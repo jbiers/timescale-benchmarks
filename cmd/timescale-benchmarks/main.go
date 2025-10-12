@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/jbiers/timescale-benchmark/pkg/csvreader"
+	"github.com/sirupsen/logrus"
 )
 
 type benchmarkConfig struct {
@@ -23,5 +24,8 @@ func init() {
 func main() {
 	// Opens the CSV file and parses it in a separate Goroutine
 	// As you process it, each line will be converted into a QueryData struct and sent into a channel
-	csvreader.Stream(*config.file)
+	err := csvreader.Stream(*config.file)
+	if err != nil {
+		logrus.Fatal(err)
+	}
 }
