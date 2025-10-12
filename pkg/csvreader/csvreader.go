@@ -31,7 +31,7 @@ func Stream(filePath string) error {
 
 	CSVreader := csv.NewReader(IOreader)
 	CSVreader.FieldsPerRecord = 3
-	//CSVreader.ReuseRecord = true
+	CSVreader.ReuseRecord = true
 
 	header, err := CSVreader.Read()
 	if err != nil {
