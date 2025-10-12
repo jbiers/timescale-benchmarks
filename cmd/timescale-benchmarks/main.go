@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/jbiers/timescale-benchmark/pkg/csvreader"
+	"github.com/jbiers/timescale-benchmark/pkg/query"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,10 +24,19 @@ func init() {
 }
 
 func main() {
-	// Opens the CSV file and parses it in a separate Goroutine
-	// As you process it, each line will be converted into a QueryData struct and sent into a channel
-	err := csvreader.Stream(*config.file)
-	if err != nil {
-		logrus.Fatal(err)
+	// TODO: how much buffering should the channel really have?
+	queryDataChannel := make(chan query.QueryData, 100)
+
+	go func() {
+		err := csvreader.Stream(*config.file, queryDataChannel)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		close(queryDataChannel)
+	}()
+
+	for qd := range queryDataChannel {
+		fmt.Println(qd)
 	}
 }

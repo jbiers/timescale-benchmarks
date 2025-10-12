@@ -12,7 +12,7 @@ import (
 )
 
 // TODO: pass in a channel that will receive each line as a querydata type
-func Stream(filePath string) error {
+func Stream(filePath string, ch chan query.QueryData) error {
 	var IOreader io.Reader
 
 	if filePath != "" {
@@ -57,7 +57,7 @@ func Stream(filePath string) error {
 			return fmt.Errorf("Error parsing query data: %w", err)
 		}
 
-		fmt.Println(queryData)
+		ch <- queryData
 	}
 
 	return nil
