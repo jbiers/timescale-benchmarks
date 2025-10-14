@@ -36,11 +36,7 @@ func main() {
 		close(queryDataChannel)
 	}()
 
-	wp := workerpool.WorkerPool{
-		Jobs:    &queryDataChannel,
-		Workers: *config.workers,
-	}
-
+	wp := workerpool.NewWorkerPool(&queryDataChannel, *config.workers)
 	wp.Dispatch()
 
 }

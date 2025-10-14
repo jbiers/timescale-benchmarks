@@ -13,6 +13,13 @@ type WorkerPool struct {
 	Workers int
 }
 
+func NewWorkerPool(jobs *chan query.QueryData, workers int) WorkerPool {
+	return WorkerPool{
+		Jobs:    jobs,
+		Workers: workers,
+	}
+}
+
 func (wp *WorkerPool) Dispatch() {
 	var wg sync.WaitGroup
 
