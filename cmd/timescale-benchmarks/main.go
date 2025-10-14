@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/jbiers/timescale-benchmark/pkg/csvreader"
 	"github.com/jbiers/timescale-benchmark/pkg/query"
+	"github.com/jbiers/timescale-benchmark/pkg/workerpool"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,7 +36,11 @@ func main() {
 		close(queryDataChannel)
 	}()
 
-	for qd := range queryDataChannel {
-		fmt.Println(qd)
+	wp := workerpool.WorkerPool{
+		Jobs:    &queryDataChannel,
+		Workers: *config.workers,
 	}
+
+	wp.Dispatch()
+
 }
