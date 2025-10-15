@@ -10,11 +10,20 @@ import (
 )
 
 type benchmarkConfig struct {
-	file    *string
-	workers *int
+	file              *string
+	workers           *int
+	queryDataChannels []chan query.QueryData
 }
 
 var config benchmarkConfig
+
+func (cfg *benchmarkConfig) buildQueryDataChannels() {
+	cfg.queryDataChannels = make([]chan query.QueryData, *config.workers)
+
+	for ch := range cfg.queryDataChannels {
+		cfg.queryDataChannels[ch] = make(chan query.QueryData)
+	}
+}
 
 func init() {
 	config.file = flag.String("file", "", "Path to CSV formatted file containing the query parameters to be run in the benchmark. Defaults to nil, waiting for STDIN.")
@@ -25,18 +34,19 @@ func init() {
 
 func main() {
 	// TODO: how much buffering should the channel really have?
-	queryDataChannel := make(chan query.QueryData, 100)
+	config.buildQueryDataChannels()
 
 	go func() {
-		err := csvreader.Stream(*config.file, queryDataChannel)
+		err := csvreader.Stream(*config.file, config.queryDataChannels)
 		if err != nil {
 			logrus.Fatal(err)
 		}
 
-		close(queryDataChannel)
+		for _, w := range config.queryDataChannels {
+			close(w)
+		}
 	}()
 
-	wp := workerpool.NewWorkerPool(&queryDataChannel, *config.workers)
+	wp := workerpool.NewWorkerPool(config.queryDataChannels, *config.workers)
 	wp.Dispatch()
-
 }

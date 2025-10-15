@@ -1,20 +1,18 @@
 package workerpool
 
 import (
-	"fmt"
 	"sync"
-	"time"
 
 	"github.com/jbiers/timescale-benchmark/pkg/query"
 )
 
 type WorkerPool struct {
-	Jobs    *chan query.QueryData
+	Jobs    []chan query.QueryData
 	Workers int
 }
 
-func NewWorkerPool(jobs *chan query.QueryData, workers int) WorkerPool {
-	return WorkerPool{
+func NewWorkerPool(jobs []chan query.QueryData, workers int) *WorkerPool {
+	return &WorkerPool{
 		Jobs:    jobs,
 		Workers: workers,
 	}
@@ -25,17 +23,16 @@ func (wp *WorkerPool) Dispatch() {
 
 	for w := 0; w < wp.Workers; w++ {
 		wg.Add(1)
-		go wp.Worker(w, wp.Jobs, &wg)
+		go wp.Worker(w, wp.Jobs[w], &wg)
 	}
 
 	wg.Wait()
 }
 
-func (wp *WorkerPool) Worker(id int, jobs *chan query.QueryData, wg *sync.WaitGroup) {
+func (wp *WorkerPool) Worker(id int, jobs chan query.QueryData, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	for job := range *jobs {
-		time.Sleep(10 * time.Millisecond)
-		fmt.Println(job)
+	for job := range jobs {
+		job.Process()
 	}
 }
