@@ -33,7 +33,6 @@ func init() {
 }
 
 func main() {
-	// TODO: how much buffering should the channel really have?
 	config.buildQueryDataChannels()
 
 	go func() {

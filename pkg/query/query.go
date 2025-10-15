@@ -1,7 +1,6 @@
 package query
 
 import (
-	"fmt"
 	"hash/fnv"
 	"time"
 )
@@ -12,13 +11,13 @@ type QueryData struct {
 	EndTime   time.Time
 }
 
-func (qd *QueryData) GetIndex(maxIndex int) int {
+func (qd *QueryData) GetHash(num int) int {
 	h := fnv.New32a()
 	h.Write([]byte(qd.Hostname))
 
-	return int(h.Sum32()) % maxIndex
+	return int(h.Sum32()) % num
 }
 
 func (qd *QueryData) Process() {
-	fmt.Println()
+
 }

@@ -57,7 +57,7 @@ func Stream(filePath string, chs []chan query.QueryData) error {
 			return fmt.Errorf("Error parsing query data: %w", err)
 		}
 
-		idx := queryData.GetIndex(len(chs))
+		idx := queryData.GetHash(len(chs))
 		chs[idx] <- queryData
 	}
 
