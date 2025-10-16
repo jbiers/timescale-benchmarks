@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"time"
 
 	"github.com/jbiers/timescale-benchmark/pkg/csvreader"
 	"github.com/jbiers/timescale-benchmark/pkg/database"
@@ -11,19 +13,48 @@ import (
 )
 
 type benchmarkConfig struct {
-	file              *string
-	workers           *int
-	queryDataChannels []chan query.QueryData
+	file    *string
+	workers *int
 }
 
 var config benchmarkConfig
 
-func (cfg *benchmarkConfig) buildQueryDataChannels() {
-	cfg.queryDataChannels = make([]chan query.QueryData, *config.workers)
+func buildQueryDataChannels() []chan query.QueryData {
+	queryDataChannels := make([]chan query.QueryData, *config.workers)
 
-	for ch := range cfg.queryDataChannels {
-		cfg.queryDataChannels[ch] = make(chan query.QueryData)
+	for ch := range queryDataChannels {
+		queryDataChannels[ch] = make(chan query.QueryData)
 	}
+
+	return queryDataChannels
+}
+
+// TODO: clean this ugly thing
+func getMetrics(r []time.Duration) (int, time.Duration, time.Duration, time.Duration, time.Duration) {
+	var total time.Duration
+	var longest time.Duration
+	var shortest time.Duration
+	var average time.Duration
+
+	for i, t := range r {
+		total += t
+
+		if t > longest {
+			longest = t
+		}
+
+		if i == 0 {
+			shortest = t
+		} else {
+			if t < shortest {
+				shortest = t
+			}
+		}
+	}
+
+	average = total / time.Duration(len(r))
+
+	return len(r), total, longest, shortest, average
 }
 
 func init() {
@@ -35,15 +66,15 @@ func init() {
 
 // TODO: should start thinking about graceful shutdown
 func main() {
-	config.buildQueryDataChannels()
+	dataChannels := buildQueryDataChannels()
 
 	go func() {
-		err := csvreader.Stream(*config.file, config.queryDataChannels)
+		err := csvreader.Stream(*config.file, dataChannels)
 		if err != nil {
 			logrus.Fatalf("failed to stream from CSV file: %v", err)
 		}
 
-		for _, w := range config.queryDataChannels {
+		for _, w := range dataChannels {
 			close(w)
 		}
 	}()
@@ -54,6 +85,14 @@ func main() {
 	}
 	defer databasePool.Close()
 
-	workerPool := workerpool.NewWorkerPool(config.queryDataChannels, *config.workers, databasePool)
+	workerPool := workerpool.NewWorkerPool(dataChannels, *config.workers, databasePool)
 	workerPool.Dispatch()
+
+	num, totalTime, longest, shortest, average := getMetrics(workerPool.Results)
+	fmt.Println("Number of queries:", num)
+	fmt.Println("Total time:", totalTime)
+	fmt.Println("Average time:", average)
+	fmt.Println("Longest time:", longest)
+	fmt.Println("Shortest time:", shortest)
+	fmt.Println("Median time:")
 }
