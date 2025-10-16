@@ -28,18 +28,18 @@ func (wp *WorkerPool) Dispatch() {
 
 	for w := 0; w < wp.Workers; w++ {
 		wg.Add(1)
-		go wp.Worker(w, wp.Jobs[w], &wg, wp.DBPool)
+		go wp.Worker(w, &wg)
 	}
 
 	wg.Wait()
 }
 
-func (wp *WorkerPool) Worker(id int, jobs chan query.QueryData, wg *sync.WaitGroup, dbPool *pgxpool.Pool) {
+func (wp *WorkerPool) Worker(id int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	for job := range jobs {
+	for job := range wp.Jobs[id] {
 		//start := time.Now()
-		err := job.RunQuery(context.Background(), dbPool)
+		err := job.RunQuery(context.Background(), wp.DBPool)
 		if err != nil {
 			logrus.Errorf("worker %d failed to run query: %v", id, err)
 
