@@ -33,13 +33,15 @@ The native *date_bin* function could potentially be used but I preferred Timesca
 
 ```SQL
 SELECT
-  time_bucket('1 minute', ts) AS minute,
+  time_bucket('1 minute', ts, '2017-01-01 08:59:22'::timestamp) AS minute,
   MAX(usage) AS max_usage,
   MIN(usage) AS min_usage
 FROM cpu_usage
 WHERE host = 'host_000008'
   AND ts >= '2017-01-01 08:59:22'
-  AND ts <= '2017-01-01 09:59:22'
+  AND ts < '2017-01-01 10:59:22'
 GROUP BY minute
 ORDER BY minute;
 ```
+
+81.93 |     56.61

@@ -2,12 +2,12 @@ package main
 
 import (
 	"flag"
-	"log"
 
 	"github.com/jbiers/timescale-benchmark/pkg/csvreader"
 	"github.com/jbiers/timescale-benchmark/pkg/database"
 	"github.com/jbiers/timescale-benchmark/pkg/query"
 	"github.com/jbiers/timescale-benchmark/pkg/workerpool"
+	"github.com/sirupsen/logrus"
 )
 
 type benchmarkConfig struct {
@@ -40,7 +40,7 @@ func main() {
 	go func() {
 		err := csvreader.Stream(*config.file, config.queryDataChannels)
 		if err != nil {
-			log.Fatalf("failed to stream from CSV file: %v", err)
+			logrus.Fatalf("failed to stream from CSV file: %v", err)
 		}
 
 		for _, w := range config.queryDataChannels {
@@ -50,7 +50,7 @@ func main() {
 
 	databasePool, err := database.InitDB()
 	if err != nil {
-		log.Fatalf("database initialization failed: %v", err)
+		logrus.Fatalf("database initialization failed: %v", err)
 	}
 	defer databasePool.Close()
 
