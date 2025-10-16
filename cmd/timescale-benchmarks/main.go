@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
+	"log"
 
 	"github.com/jbiers/timescale-benchmark/pkg/csvreader"
+	"github.com/jbiers/timescale-benchmark/pkg/database"
 	"github.com/jbiers/timescale-benchmark/pkg/query"
 	"github.com/jbiers/timescale-benchmark/pkg/workerpool"
-	"github.com/sirupsen/logrus"
 )
 
 type benchmarkConfig struct {
@@ -32,13 +33,14 @@ func init() {
 	flag.Parse()
 }
 
+// TODO: should start thinking about graceful shutdown
 func main() {
 	config.buildQueryDataChannels()
 
 	go func() {
 		err := csvreader.Stream(*config.file, config.queryDataChannels)
 		if err != nil {
-			logrus.Fatal(err)
+			log.Fatalf("failed to stream from CSV file: %v", err)
 		}
 
 		for _, w := range config.queryDataChannels {
@@ -46,6 +48,12 @@ func main() {
 		}
 	}()
 
-	wp := workerpool.NewWorkerPool(config.queryDataChannels, *config.workers)
-	wp.Dispatch()
+	databasePool, err := database.InitDB()
+	if err != nil {
+		log.Fatalf("database initialization failed: %v", err)
+	}
+	defer databasePool.Close()
+
+	workerPool := workerpool.NewWorkerPool(config.queryDataChannels, *config.workers, databasePool)
+	workerPool.Dispatch()
 }
