@@ -44,11 +44,10 @@ func InitFlags() {
 func InitEnv() {
 	DatabaseURL = os.Getenv("DB_URL")
 	if DatabaseURL == "" {
-		DatabaseURL = "postgres://postgres:password@localhost:5432/homework"
+		DatabaseURL = "postgres://postgres:password@timescaledb:5432/homework"
+		Logger.Warnf("No database URL provided. Default will be used: %s", DatabaseURL)
 	}
 }
-
-//user=jack password=secret host=pg.example.com port=5432 dbname=mydb sslmode=verify-ca pool_max_conns=10 pool_max_conn_lifetime=1h30m
 
 func InitLogger() {
 	Logger = logrus.New()

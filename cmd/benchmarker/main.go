@@ -11,9 +11,9 @@ import (
 )
 
 func init() {
+	config.InitLogger()
 	config.InitEnv()
 	config.InitFlags()
-	config.InitLogger()
 }
 
 func main() {
