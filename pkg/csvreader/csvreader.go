@@ -12,7 +12,6 @@ import (
 	"github.com/jbiers/timescale-benchmark/pkg/query"
 )
 
-// TODO: pass in a channel that will receive each line as a querydata type
 func Stream(chs []chan query.QueryData) error {
 	var IOreader io.Reader
 
@@ -22,11 +21,14 @@ func Stream(chs []chan query.QueryData) error {
 			return fmt.Errorf("error opening the query data file %s: %w", config.FilePath, err)
 		}
 
-		// TODO: what are the real performance differences of using bufio.Reader vs a regular os.File?
 		IOreader = bufio.NewReader(file)
 		defer file.Close()
 	} else {
-		// TODO: does the program work properly with piped input and with copying text into stdin after it's started?
+		stat, _ := os.Stdin.Stat()
+		if (stat.Mode() & os.ModeCharDevice) != 0 {
+			return fmt.Errorf("no input provided (expected --file flag or piped data)")
+		}
+
 		IOreader = bufio.NewReader(os.Stdin)
 	}
 
@@ -65,9 +67,6 @@ func Stream(chs []chan query.QueryData) error {
 	return nil
 }
 
-// TODO: can I assume that for all CSV files the first line will contain headers?
-// this piece of code will invalidate any file without a header that matches the current setup
-// which makes the program very specific and not adaptable to other queries
 func validateHeaderLine(header []string) error {
 
 	if len(header) != 3 {

@@ -29,7 +29,6 @@ func InitDB(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("error creating database pool: %v", err)
 	}
 
-	// TODO: handle contexts
 	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
 		return nil, fmt.Errorf("error pinging database: %v", err)
