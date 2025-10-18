@@ -43,5 +43,3 @@ WHERE host = 'host_000008'
 GROUP BY minute
 ORDER BY minute;
 ```
-
-81.93 |     56.61

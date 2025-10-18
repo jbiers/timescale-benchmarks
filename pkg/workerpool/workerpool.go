@@ -2,6 +2,7 @@ package workerpool
 
 import (
 	"context"
+	"slices"
 	"sync"
 	"time"
 
@@ -11,48 +12,82 @@ import (
 )
 
 type WorkerPool struct {
-	Jobs         []chan query.QueryData
-	Workers      int
-	DBPool       *pgxpool.Pool
-	Results      []time.Duration
-	ResultsMutex sync.Mutex
+	jobs         []chan query.QueryData
+	workers      int
+	dbPool       *pgxpool.Pool
+	results      []time.Duration
+	resultsMutex sync.Mutex
 }
 
 func NewWorkerPool(jobs []chan query.QueryData, workers int, dbPool *pgxpool.Pool) *WorkerPool {
 	return &WorkerPool{
-		Jobs:    jobs,
-		Workers: workers,
-		DBPool:  dbPool,
-		Results: []time.Duration{},
+		jobs:    jobs,
+		workers: workers,
+		dbPool:  dbPool,
+		results: []time.Duration{},
 	}
 }
 
-func (wp *WorkerPool) Dispatch() {
+func (wp *WorkerPool) Dispatch() *WorkerPoolMetrics {
 	var wg sync.WaitGroup
 
-	for w := 0; w < wp.Workers; w++ {
+	for w := 0; w < wp.workers; w++ {
 		wg.Add(1)
-		go wp.Worker(w, &wg)
+		go wp.worker(w, &wg)
 	}
 
 	wg.Wait()
+
+	return wp.getWorkerPoolMetrics()
 }
 
-func (wp *WorkerPool) Worker(id int, wg *sync.WaitGroup) {
+func (wp *WorkerPool) worker(id int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	for job := range wp.Jobs[id] {
+	for job := range wp.jobs[id] {
 		start := time.Now()
 
-		err := job.RunQuery(context.Background(), wp.DBPool)
+		err := job.RunQuery(context.Background(), wp.dbPool)
 		if err != nil {
 			logrus.Errorf("worker %d failed to run query: %v", id, err)
 			return
 		}
 		total := time.Since(start)
 
-		wp.ResultsMutex.Lock()
-		wp.Results = append(wp.Results, total)
-		wp.ResultsMutex.Unlock()
+		wp.resultsMutex.Lock()
+		wp.results = append(wp.results, total)
+		wp.resultsMutex.Unlock()
+	}
+}
+
+func (wp *WorkerPool) getWorkerPoolMetrics() *WorkerPoolMetrics {
+	if len(wp.results) == 0 {
+		return &WorkerPoolMetrics{}
+	}
+
+	slices.Sort(wp.results)
+
+	processedJobs := len(wp.results)
+
+	var totalTime time.Duration
+	for _, result := range wp.results {
+		totalTime += result
+	}
+	var medianTime time.Duration
+	if processedJobs%2 == 1 {
+		medianTime = wp.results[processedJobs/2]
+	} else {
+		mid1 := wp.results[(processedJobs/2)-1]
+		mid2 := wp.results[processedJobs/2]
+		medianTime = (mid1 + mid2) / 2
+	}
+
+	return &WorkerPoolMetrics{
+		ProcessedJobs: processedJobs,
+		LongestTime:   wp.results[processedJobs-1],
+		ShortestTime:  wp.results[0],
+		TotalTime:     totalTime,
+		AverageTime:   totalTime / time.Duration(processedJobs),
+		MedianTime:    medianTime,
 	}
 }

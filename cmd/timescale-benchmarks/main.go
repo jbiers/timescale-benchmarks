@@ -2,13 +2,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"time"
 
 	"github.com/jbiers/timescale-benchmark/pkg/csvreader"
 	"github.com/jbiers/timescale-benchmark/pkg/database"
 	"github.com/jbiers/timescale-benchmark/pkg/query"
-	"github.com/jbiers/timescale-benchmark/pkg/workerpool"
+	wp "github.com/jbiers/timescale-benchmark/pkg/workerpool"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,34 +25,6 @@ func buildQueryDataChannels() []chan query.QueryData {
 	}
 
 	return queryDataChannels
-}
-
-// TODO: clean this ugly thing
-func getMetrics(r []time.Duration) (int, time.Duration, time.Duration, time.Duration, time.Duration) {
-	var total time.Duration
-	var longest time.Duration
-	var shortest time.Duration
-	var average time.Duration
-
-	for i, t := range r {
-		total += t
-
-		if t > longest {
-			longest = t
-		}
-
-		if i == 0 {
-			shortest = t
-		} else {
-			if t < shortest {
-				shortest = t
-			}
-		}
-	}
-
-	average = total / time.Duration(len(r))
-
-	return len(r), total, longest, shortest, average
 }
 
 func init() {
@@ -85,14 +55,7 @@ func main() {
 	}
 	defer databasePool.Close()
 
-	workerPool := workerpool.NewWorkerPool(dataChannels, *config.workers, databasePool)
-	workerPool.Dispatch()
-
-	num, totalTime, longest, shortest, average := getMetrics(workerPool.Results)
-	fmt.Println("Number of queries:", num)
-	fmt.Println("Total time:", totalTime)
-	fmt.Println("Average time:", average)
-	fmt.Println("Longest time:", longest)
-	fmt.Println("Shortest time:", shortest)
-	fmt.Println("Median time:")
+	workerPool := wp.NewWorkerPool(dataChannels, *config.workers, databasePool)
+	wpMetrics := workerPool.Dispatch()
+	wpMetrics.ReportWorkerPoolMetrics()
 }
