@@ -11,6 +11,7 @@ import (
 )
 
 func init() {
+	config.InitEnv()
 	config.InitFlags()
 	config.InitLogger()
 }

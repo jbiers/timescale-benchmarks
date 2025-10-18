@@ -13,6 +13,10 @@ var (
 	Debug    bool
 )
 
+var (
+	DatabaseURL string
+)
+
 var Logger *logrus.Logger
 
 const (
@@ -37,22 +41,27 @@ func InitFlags() {
 	flag.Parse()
 }
 
+func InitEnv() {
+	DatabaseURL = os.Getenv("DB_URL")
+	if DatabaseURL == "" {
+		DatabaseURL = "postgres://postgres:password@localhost:5432/homework"
+	}
+}
+
+//user=jack password=secret host=pg.example.com port=5432 dbname=mydb sslmode=verify-ca pool_max_conns=10 pool_max_conn_lifetime=1h30m
+
 func InitLogger() {
 	Logger = logrus.New()
 	Logger.SetOutput(os.Stdout)
+	Logger.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+		ForceColors:   true,
+	})
 
 	if Debug {
 		Logger.SetLevel(logrus.DebugLevel)
-		Logger.SetFormatter(&logrus.TextFormatter{
-			FullTimestamp: true,
-			ForceColors:   true,
-		})
 		Logger.Debug("Debug logging enabled")
 	} else {
 		Logger.SetLevel(logrus.InfoLevel)
-		Logger.SetFormatter(&logrus.TextFormatter{
-			FullTimestamp: true,
-			DisableColors: true,
-		})
 	}
 }

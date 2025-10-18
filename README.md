@@ -43,3 +43,5 @@ WHERE host = 'host_000008'
 GROUP BY minute
 ORDER BY minute;
 ```
+
+Docker image requires setting up volume with desired file.

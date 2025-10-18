@@ -12,9 +12,8 @@ import (
 
 var dbOnce sync.Once
 
-// TODO: get db info based on env variables
 func InitDB(ctx context.Context) (*pgxpool.Pool, error) {
-	poolCfg, err := pgxpool.ParseConfig("postgres://postgres:password@localhost:5432/homework")
+	poolCfg, err := pgxpool.ParseConfig(config.DatabaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing database config: %v", err)
 	}
