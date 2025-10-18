@@ -28,12 +28,12 @@ func NewWorkerPool(jobs []chan query.QueryData, dbPool *pgxpool.Pool) *WorkerPoo
 	}
 }
 
-func (wp *WorkerPool) Dispatch() *WorkerPoolMetrics {
+func (wp *WorkerPool) Dispatch(ctx context.Context) *WorkerPoolMetrics {
 	var wg sync.WaitGroup
 
 	for w := 0; w < wp.workers; w++ {
 		wg.Add(1)
-		go wp.worker(w, &wg)
+		go wp.worker(ctx, w, &wg)
 	}
 
 	wg.Wait()
@@ -41,12 +41,12 @@ func (wp *WorkerPool) Dispatch() *WorkerPoolMetrics {
 	return wp.getWorkerPoolMetrics()
 }
 
-func (wp *WorkerPool) worker(id int, wg *sync.WaitGroup) {
+func (wp *WorkerPool) worker(ctx context.Context, id int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for job := range wp.jobs[id] {
 		start := time.Now()
-		err := job.RunQuery(context.Background(), wp.dbPool)
+		err := job.RunQuery(ctx, wp.dbPool)
 		if err != nil {
 			config.Logger.Errorf("Worker %d failed to run query: %v. The processing time will not be included in the result metrics.", id, err)
 			return

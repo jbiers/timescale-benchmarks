@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/jbiers/timescale-benchmark/config"
 	"github.com/jbiers/timescale-benchmark/pkg/csvreader"
 	"github.com/jbiers/timescale-benchmark/pkg/database"
@@ -13,7 +15,6 @@ func init() {
 	config.InitLogger()
 }
 
-// TODO: should start thinking about graceful shutdown
 func main() {
 	dataChannels := buildQueryDataChannels()
 
@@ -28,14 +29,16 @@ func main() {
 		}
 	}()
 
-	dbPool, err := database.InitDB()
+	ctx := context.Background()
+
+	dbPool, err := database.InitDB(ctx)
 	if err != nil {
 		config.Logger.Fatalf("Database initialization failed: %v", err)
 	}
 	defer dbPool.Close()
 
 	workerPool := wp.NewWorkerPool(dataChannels, dbPool)
-	wpMetrics := workerPool.Dispatch()
+	wpMetrics := workerPool.Dispatch(ctx)
 	wpMetrics.ReportWorkerPoolMetrics()
 }
 

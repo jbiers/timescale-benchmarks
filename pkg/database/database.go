@@ -11,7 +11,7 @@ import (
 var dbOnce sync.Once
 
 // TODO: get db info based on env variables
-func InitDB() (*pgxpool.Pool, error) {
+func InitDB(ctx context.Context) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig("postgres://postgres:password@localhost:5432/homework")
 	if err != nil {
 		return nil, fmt.Errorf("error parsing database config: %v", err)
@@ -22,7 +22,7 @@ func InitDB() (*pgxpool.Pool, error) {
 
 	var pool *pgxpool.Pool
 	dbOnce.Do(func() {
-		pool, err = pgxpool.NewWithConfig(context.Background(), config)
+		pool, err = pgxpool.NewWithConfig(ctx, config)
 	})
 
 	if err != nil {
@@ -30,7 +30,7 @@ func InitDB() (*pgxpool.Pool, error) {
 	}
 
 	// TODO: handle contexts
-	if err := pool.Ping(context.Background()); err != nil {
+	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
 		return nil, fmt.Errorf("error pinging database: %v", err)
 	}
