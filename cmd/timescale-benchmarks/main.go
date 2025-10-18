@@ -6,11 +6,11 @@ import (
 	"github.com/jbiers/timescale-benchmark/pkg/database"
 	"github.com/jbiers/timescale-benchmark/pkg/query"
 	wp "github.com/jbiers/timescale-benchmark/pkg/workerpool"
-	"github.com/sirupsen/logrus"
 )
 
 func init() {
-	config.ParseConfig()
+	config.InitFlags()
+	config.InitLogger()
 }
 
 // TODO: should start thinking about graceful shutdown
@@ -20,7 +20,7 @@ func main() {
 	go func() {
 		err := csvreader.Stream(dataChannels)
 		if err != nil {
-			logrus.Fatalf("failed to stream from CSV file: %v", err)
+			config.Logger.Fatalf("Failed to stream from CSV file: %v", err)
 		}
 
 		for _, w := range dataChannels {
@@ -30,7 +30,7 @@ func main() {
 
 	dbPool, err := database.InitDB()
 	if err != nil {
-		logrus.Fatalf("database initialization failed: %v", err)
+		config.Logger.Fatalf("Database initialization failed: %v", err)
 	}
 	defer dbPool.Close()
 

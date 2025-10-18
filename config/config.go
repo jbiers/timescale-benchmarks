@@ -1,12 +1,19 @@
 package config
 
-import "flag"
+import (
+	"flag"
+	"os"
+
+	"github.com/sirupsen/logrus"
+)
 
 var (
 	FilePath string
 	Workers  int
 	Debug    bool
 )
+
+var Logger *logrus.Logger
 
 const (
 	fileFlag    = "file"
@@ -19,13 +26,33 @@ const (
 
 	debugFlag    = "debug"
 	debugDefault = false
-	debugMessage = "Debug mode will have the program log out the results and processing time for each individual query. Defaults to false."
+	debugMessage = "Debug mode will have the program log out the processing time for each individual query. Defaults to false."
 )
 
-func ParseConfig() {
+func InitFlags() {
 	flag.StringVar(&FilePath, fileFlag, fileDefault, fileMessage)
 	flag.IntVar(&Workers, workersFlag, workersDefault, workersMessage)
 	flag.BoolVar(&Debug, debugFlag, debugDefault, debugMessage)
 
 	flag.Parse()
+}
+
+func InitLogger() {
+	Logger = logrus.New()
+	Logger.SetOutput(os.Stdout)
+
+	if Debug {
+		Logger.SetLevel(logrus.DebugLevel)
+		Logger.SetFormatter(&logrus.TextFormatter{
+			FullTimestamp: true,
+			ForceColors:   true,
+		})
+		Logger.Debug("Debug logging enabled")
+	} else {
+		Logger.SetLevel(logrus.InfoLevel)
+		Logger.SetFormatter(&logrus.TextFormatter{
+			FullTimestamp: true,
+			DisableColors: true,
+		})
+	}
 }

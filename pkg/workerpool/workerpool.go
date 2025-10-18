@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jbiers/timescale-benchmark/config"
 	"github.com/jbiers/timescale-benchmark/pkg/query"
-	"github.com/sirupsen/logrus"
 )
 
 type WorkerPool struct {
@@ -47,13 +46,14 @@ func (wp *WorkerPool) worker(id int, wg *sync.WaitGroup) {
 
 	for job := range wp.jobs[id] {
 		start := time.Now()
-
 		err := job.RunQuery(context.Background(), wp.dbPool)
 		if err != nil {
-			logrus.Errorf("worker %d failed to run query: %v", id, err)
+			config.Logger.Errorf("Worker %d failed to run query: %v. The processing time will not be included in the result metrics.", id, err)
 			return
 		}
 		total := time.Since(start)
+
+		config.Logger.Debugf("Worker %d - Query Params - (Hostname: %s, StartTime: %v, EndTime: %v) - Total processing time: %v", id, job.Hostname, job.StartTime, job.EndTime, total)
 
 		wp.resultsMutex.Lock()
 		wp.results = append(wp.results, total)
