@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jbiers/timescale-benchmark/config"
 	"github.com/jbiers/timescale-benchmark/pkg/query"
 	"github.com/sirupsen/logrus"
 )
@@ -19,10 +20,10 @@ type WorkerPool struct {
 	resultsMutex sync.Mutex
 }
 
-func NewWorkerPool(jobs []chan query.QueryData, workers int, dbPool *pgxpool.Pool) *WorkerPool {
+func NewWorkerPool(jobs []chan query.QueryData, dbPool *pgxpool.Pool) *WorkerPool {
 	return &WorkerPool{
 		jobs:    jobs,
-		workers: workers,
+		workers: config.Workers,
 		dbPool:  dbPool,
 		results: []time.Duration{},
 	}

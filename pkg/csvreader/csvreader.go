@@ -8,17 +8,18 @@ import (
 	"os"
 	"time"
 
+	"github.com/jbiers/timescale-benchmark/config"
 	"github.com/jbiers/timescale-benchmark/pkg/query"
 )
 
 // TODO: pass in a channel that will receive each line as a querydata type
-func Stream(filePath string, chs []chan query.QueryData) error {
+func Stream(chs []chan query.QueryData) error {
 	var IOreader io.Reader
 
-	if filePath != "" {
-		file, err := os.Open(filePath)
+	if config.FilePath != "" {
+		file, err := os.Open(config.FilePath)
 		if err != nil {
-			return fmt.Errorf("error opening the query data file %s: %w", filePath, err)
+			return fmt.Errorf("error opening the query data file %s: %w", config.FilePath, err)
 		}
 
 		// TODO: what are the real performance differences of using bufio.Reader vs a regular os.File?
@@ -35,12 +36,12 @@ func Stream(filePath string, chs []chan query.QueryData) error {
 
 	header, err := CSVreader.Read()
 	if err != nil {
-		return fmt.Errorf("error parsing first line of query data file %s: %w", filePath, err)
+		return fmt.Errorf("error parsing first line of query data file %s: %w", config.FilePath, err)
 	}
 
 	err = validateHeaderLine(header)
 	if err != nil {
-		return fmt.Errorf("header validation failed for file %s: %w", filePath, err)
+		return fmt.Errorf("header validation failed for file %s: %w", config.FilePath, err)
 	}
 
 	for {
@@ -49,7 +50,7 @@ func Stream(filePath string, chs []chan query.QueryData) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("error reading CSV line from query data file %s: %w", filePath, err)
+			return fmt.Errorf("error reading CSV line from query data file %s: %w", config.FilePath, err)
 		}
 
 		queryData, err := parseQueryData(record)
