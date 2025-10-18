@@ -4,25 +4,28 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jbiers/timescale-benchmark/config"
 )
 
 var dbOnce sync.Once
 
 // TODO: get db info based on env variables
 func InitDB(ctx context.Context) (*pgxpool.Pool, error) {
-	config, err := pgxpool.ParseConfig("postgres://postgres:password@localhost:5432/homework")
+	poolCfg, err := pgxpool.ParseConfig("postgres://postgres:password@localhost:5432/homework")
 	if err != nil {
 		return nil, fmt.Errorf("error parsing database config: %v", err)
 	}
 
-	// TODO: properly configure connection pool
-	config.MaxConns = 10
+	poolCfg.MaxConns = int32(config.Workers)
+	poolCfg.MinConns = int32(config.Workers)
+	poolCfg.MaxConnIdleTime = time.Minute * 10
 
 	var pool *pgxpool.Pool
 	dbOnce.Do(func() {
-		pool, err = pgxpool.NewWithConfig(ctx, config)
+		pool, err = pgxpool.NewWithConfig(ctx, poolCfg)
 	})
 
 	if err != nil {
