@@ -12,6 +12,8 @@ import (
 	"github.com/jbiers/timescale-benchmark/pkg/query"
 )
 
+const timeStringFormat = "2006-01-02 15:04:05"
+
 func Stream(chs []chan query.QueryData) error {
 	var IOreader io.Reader
 
@@ -70,19 +72,19 @@ func Stream(chs []chan query.QueryData) error {
 func validateHeaderLine(header []string) error {
 
 	if len(header) != 3 {
-		return fmt.Errorf("expected three entries in header line")
+		return fmt.Errorf("expected three entries in header line, found %d", len(header))
 	}
 
 	if header[0] != "hostname" {
-		return fmt.Errorf("expected first entry in header line to match 'hostname'")
+		return fmt.Errorf("expected first entry in header line to match 'hostname', found '%s'", header[0])
 	}
 
 	if header[1] != "start_time" {
-		return fmt.Errorf("expected first entry in header line to match 'start_time'")
+		return fmt.Errorf("expected second entry in header line to match 'start_time', found '%s'", header[1])
 	}
 
 	if header[2] != "end_time" {
-		return fmt.Errorf("expected first entry in header line to match 'end_time'")
+		return fmt.Errorf("expected third entry in header line to match 'end_time', found '%s'", header[2])
 	}
 
 	return nil
@@ -93,15 +95,14 @@ func parseQueryData(record []string) (query.QueryData, error) {
 		return query.QueryData{}, fmt.Errorf("expected 3 entries in query data record, found %d", len(record))
 	}
 
-	timeStringFormat := "2006-01-02 15:04:05"
 	startTime, err := time.Parse(timeStringFormat, record[1])
 	if err != nil {
-		return query.QueryData{}, fmt.Errorf("failed to parse 'start_time' as time.Time format: %w", err)
+		return query.QueryData{}, fmt.Errorf("failed to parse 'start_time' '%s' as time.Time format: %w", record[1], err)
 	}
 
 	endTime, err := time.Parse(timeStringFormat, record[2])
 	if err != nil {
-		return query.QueryData{}, fmt.Errorf("failed to parse 'end_time' as time.Time format: %w", err)
+		return query.QueryData{}, fmt.Errorf("failed to parse 'end_time' '%s' as time.Time format: %w", record[2], err)
 	}
 
 	return query.QueryData{
