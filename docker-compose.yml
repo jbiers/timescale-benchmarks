@@ -1,0 +1,31 @@
+services:
+  timescaledb:
+    image: timescale/timescaledb-ha:pg17
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/pgdata
+      - ./db/cpu_usage.sql:/docker-entrypoint-initdb.d/cpu_usage.sql
+      - ./db/cpu_usage.csv:/data/cpu_usage.csv
+      - ./db/healthcheck.sh:/healthcheck.sh
+    environment:
+      - PGDATA=/pgdata
+      - POSTGRES_PASSWORD=password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d homework"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 2min
+
+  benchmarker:
+    build: .
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    environment:
+      - DB_URL=${DB_URL:-postgres://postgres:password@timescaledb:5432/homework}
+    volumes:
+      - ${FILE:-./db/query_params.csv}:/app/query_params.csv
+    entrypoint: ["./benchmarker"]
+    command: ["--file", "/app/query_params.csv", "--workers", "${WORKERS:-2}", "--debug=${DEBUG:-false}"]

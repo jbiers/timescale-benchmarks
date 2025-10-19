@@ -7,3 +7,5 @@ CREATE TABLE cpu_usage(
   usage DOUBLE PRECISION
 );
 SELECT create_hypertable('cpu_usage', 'ts');
+
+\COPY cpu_usage FROM '/data/cpu_usage.csv' CSV HEADER;

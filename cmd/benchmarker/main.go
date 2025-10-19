@@ -11,9 +11,11 @@ import (
 )
 
 func init() {
-	config.InitLogger()
-	config.InitEnv()
 	config.InitFlags()
+	config.InitEnv()
+	config.InitLogger()
+
+	config.Logger.Infof("Program initialized with: Workers: %d, Debug: %t", config.Workers, config.Debug)
 }
 
 func main() {
