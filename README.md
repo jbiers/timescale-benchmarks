@@ -21,6 +21,24 @@ This command will:
 WORKERS=7 FILE=./db/query_params_long.csv DEBUG=true docker-compose up
 ```
 
+Alternatively, if you do not want to use Docker, simply build the application:
+
+```bash
+go build -o benchmarker ./cmd/benchmarker
+```
+
+And then interact with the binary you built, remembering to pass the proper DB_URL environment variable. Example:
+
+```bash
+DB_ENV="postgres://postgres:password@localhost:5432/homework" ./benchmarker --workers=3 --file=./db/query_params.csv
+```
+
+When interacting with the binary, you can also choose to pipe the CSV file:
+
+```bash
+cat ./db/query_params.csv | DB_ENV="postgres://postgres:password@localhost:5432/homework" ./benchmarker --workers=3
+```
+
 ## Benchmarker architecture
 
 The following diagram illustrates the data flow and architecture of the benchmarker application:

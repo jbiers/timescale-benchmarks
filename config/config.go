@@ -25,8 +25,8 @@ const (
 	fileMessage = "Path to CSV formatted file containing the query parameters to be run in the benchmark. Defaults to nil, waiting for STDIN."
 
 	workersFlag    = "workers"
-	workersDefault = 1
-	workersMessage = "Number of concurrent workers for querying the database. Defaults to 1."
+	workersDefault = 2
+	workersMessage = "Number of concurrent workers for querying the database. Defaults to 2."
 
 	debugFlag    = "debug"
 	debugDefault = false
