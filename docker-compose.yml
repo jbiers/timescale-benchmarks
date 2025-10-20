@@ -16,7 +16,7 @@ services:
       interval: 5s
       timeout: 10s
       retries: 20
-      start_period: 2min
+      start_period: 120s
 
   benchmarker:
     build: .
