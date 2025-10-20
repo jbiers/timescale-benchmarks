@@ -18,9 +18,11 @@ func InitDB(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("error parsing database config: %v", err)
 	}
 
-	poolCfg.MaxConns = int32(config.Workers)
-	poolCfg.MinConns = int32(config.Workers)
+	poolCfg.MaxConns = int32(config.Workers) + 2
+	poolCfg.MinConns = int32(config.Workers)/2 + 1
 	poolCfg.MaxConnIdleTime = time.Minute * 10
+	poolCfg.MaxConnLifetime = time.Hour * 24
+	poolCfg.HealthCheckPeriod = time.Minute * 5
 
 	var pool *pgxpool.Pool
 	dbOnce.Do(func() {

@@ -4,12 +4,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./pgdata:/pgdata
       - ./db/cpu_usage.sql:/docker-entrypoint-initdb.d/cpu_usage.sql
       - ./db/cpu_usage.csv:/data/cpu_usage.csv
-      - ./db/healthcheck.sh:/healthcheck.sh
     environment:
-      - PGDATA=/pgdata
       - POSTGRES_PASSWORD=password
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d homework"]

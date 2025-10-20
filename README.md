@@ -7,7 +7,7 @@ A Go CLI application with the goal of benchmarking TimescaleDB *SELECT* performa
 The easiest way to see the benchmarker in action:
 
 ```bash
-sudo make run
+docker-compose up
 ```
 
 Running this command relies on *docker* and *docker-compose*. Make sure you have both properly set up before running it. The command requires *sudo* to setup the required permissions to the *pgdata* repository.
@@ -19,7 +19,7 @@ This command will:
 - Launch the benchmarker application in its own container. By default, it runs with WORKERS=2, FILE=./db/query_params.csv and DEBUG=false. You can customize that by setting up environment variables when running the command. For instance:
 
 ```bash
-WORKERS=7 FILE=./db/query_params_long.csv DEBUG=true make run
+WORKERS=7 FILE=./db/query_params_long.csv DEBUG=true docker-compose up
 ```
 
 After running the application once, you can make sure the *pgdata* directory is deleted and the containers are stopped by running:
