@@ -7,10 +7,10 @@ A Go CLI application with the goal of benchmarking TimescaleDB *SELECT* performa
 The easiest way to see the benchmarker in action:
 
 ```bash
-make run
+sudo make run
 ```
 
-Running this command relies on *docker* and *docker-compose*. Make sure you have both properly set up before running it.
+Running this command relies on *docker* and *docker-compose*. Make sure you have both properly set up before running it. The command requires *sudo* to setup the required permissions to the *pgdata* repository.
 
 This command will:
 - Create a *pgdata* directory in the root of the repository and give it the right permissions. This directory will be used to mount to the *TimescaleDB* container.
@@ -27,6 +27,17 @@ After running the application once, you can make sure the *pgdata* directory is 
 ```bash
 make clean
 ```
+
+If you prefer, first setup the *pgdata* directory separately and then bring up the application:
+
+```bash
+mkdir ./pgdata
+chmod 777 pgdata
+sudo chown -R 1000:1000 pgdata
+
+docker-compose up
+```
+
 ## Code organization overview
 
 ## Benchmarker architecture

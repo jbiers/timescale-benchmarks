@@ -1,5 +1,5 @@
 setup:
-	mkdir -p pgdata
+	mkdir pgdata
 	chmod 777 pgdata
 	chown -R 1000:1000 pgdata
 
