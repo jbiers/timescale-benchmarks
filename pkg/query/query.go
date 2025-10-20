@@ -21,6 +21,6 @@ func (qd *QueryData) GetHash(num int) int {
 	return int(h.Sum32()) % num
 }
 
-func (qd *QueryData) RunQuery(ctx context.Context, repo database.Repository) error {
+func (qd *QueryData) RunQuery(ctx context.Context, repo database.Repository) (time.Duration, error) {
 	return repo.ExecuteQuery(ctx, qd.Hostname, qd.StartTime, qd.EndTime)
 }

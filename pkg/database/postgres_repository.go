@@ -17,12 +17,21 @@ func NewPostgresRepository(pool *pgxpool.Pool) *PostgresRepository {
 	}
 }
 
-func (r *PostgresRepository) ExecuteQuery(ctx context.Context, hostname string, startTime, endTime time.Time) error {
-	_, err := r.pool.Exec(ctx, Query, hostname, startTime, endTime)
+func (r *PostgresRepository) ExecuteQuery(ctx context.Context, hostname string, startTime, endTime time.Time) (time.Duration, error) {
+	conn, err := r.pool.Acquire(ctx)
 	if err != nil {
-		return err
+		return time.Duration(0), err
 	}
-	return nil
+	defer conn.Release()
+
+	start := time.Now()
+	_, err = conn.Exec(ctx, Query, hostname, startTime, endTime)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	total := time.Since(start)
+
+	return total, nil
 }
 
 const Query = `

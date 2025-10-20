@@ -45,18 +45,17 @@ func (wp *WorkerPool) worker(ctx context.Context, id int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for job := range wp.jobs[id] {
-		start := time.Now()
-		err := job.RunQuery(ctx, wp.repo)
+
+		totalTime, err := job.RunQuery(ctx, wp.repo)
 		if err != nil {
 			config.Logger.Errorf("Worker %d failed to run query: %v. The processing time will not be included in the result metrics.", id, err)
 			return
 		}
-		total := time.Since(start)
 
-		config.Logger.Debugf("Worker %d - Query Params - (Hostname: %s, StartTime: %v, EndTime: %v) - Total processing time: %v", id, job.Hostname, job.StartTime, job.EndTime, total)
+		config.Logger.Debugf("Worker %d - Query Params - (Hostname: %s, StartTime: %v, EndTime: %v) - Total processing time: %v", id, job.Hostname, job.StartTime, job.EndTime, totalTime)
 
 		wp.resultsMutex.Lock()
-		wp.results = append(wp.results, total)
+		wp.results = append(wp.results, totalTime)
 		wp.resultsMutex.Unlock()
 	}
 }
