@@ -35,7 +35,7 @@ mkdir ./pgdata
 chmod 777 pgdata
 sudo chown -R 1000:1000 pgdata
 
-docker-compose up
+WORKERS=3 FILE=./db/query_params_long.csv DEBUG=false docker-compose up
 ```
 
 ## Code organization overview
