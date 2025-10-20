@@ -6,24 +6,24 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jbiers/timescale-benchmark/config"
+	"github.com/jbiers/timescale-benchmark/pkg/database"
 	"github.com/jbiers/timescale-benchmark/pkg/query"
 )
 
 type WorkerPool struct {
 	jobs         []chan query.QueryData
 	workers      int
-	dbPool       *pgxpool.Pool
+	repo         database.Repository
 	results      []time.Duration
 	resultsMutex sync.Mutex
 }
 
-func NewWorkerPool(jobs []chan query.QueryData, dbPool *pgxpool.Pool) *WorkerPool {
+func NewWorkerPool(jobs []chan query.QueryData, repo database.Repository) *WorkerPool {
 	return &WorkerPool{
 		jobs:    jobs,
 		workers: config.Workers,
-		dbPool:  dbPool,
+		repo:    repo,
 		results: []time.Duration{},
 	}
 }
@@ -46,7 +46,7 @@ func (wp *WorkerPool) worker(ctx context.Context, id int, wg *sync.WaitGroup) {
 
 	for job := range wp.jobs[id] {
 		start := time.Now()
-		err := job.RunQuery(ctx, wp.dbPool)
+		err := job.RunQuery(ctx, wp.repo)
 		if err != nil {
 			config.Logger.Errorf("Worker %d failed to run query: %v. The processing time will not be included in the result metrics.", id, err)
 			return

@@ -12,8 +12,8 @@ import (
 
 func init() {
 	config.InitFlags()
-	config.InitEnv()
 	config.InitLogger()
+	config.InitEnv()
 
 	config.Logger.Infof("Program initialized with: Workers: %d, Debug: %t", config.Workers, config.Debug)
 }
@@ -38,9 +38,11 @@ func main() {
 	if err != nil {
 		config.Logger.Fatalf("Database initialization failed: %v", err)
 	}
-	defer dbPool.Close()
 
-	workerPool := wp.NewWorkerPool(dataChannels, dbPool)
+	repo := database.NewPostgresRepository(dbPool)
+	defer repo.Close()
+
+	workerPool := wp.NewWorkerPool(dataChannels, repo)
 	wpMetrics := workerPool.Dispatch(ctx)
 	wpMetrics.ReportWorkerPoolMetrics()
 }
