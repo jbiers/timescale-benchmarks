@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jbiers/timescale-benchmark/config"
+	"github.com/jbiers/timescale-benchmark/internal/config"
 	"github.com/jbiers/timescale-benchmark/pkg/database"
 	"github.com/jbiers/timescale-benchmark/pkg/query"
 )

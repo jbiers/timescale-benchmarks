@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/jbiers/timescale-benchmark/config"
+	"github.com/jbiers/timescale-benchmark/internal/config"
 	"github.com/jbiers/timescale-benchmark/pkg/csvreader"
 	"github.com/jbiers/timescale-benchmark/pkg/database"
 	"github.com/jbiers/timescale-benchmark/pkg/query"

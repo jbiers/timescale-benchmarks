@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jbiers/timescale-benchmark/config"
+	"github.com/jbiers/timescale-benchmark/internal/config"
 	"github.com/jbiers/timescale-benchmark/pkg/query"
 	"github.com/stretchr/testify/assert"
 )
